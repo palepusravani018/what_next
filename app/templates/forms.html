@@ -13,6 +13,13 @@
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
+        <p>
+            {{ form.qualification.label }}<br>
+            {{ form.qualification(size=32) }}<br>
+            {% for error in form.qualification.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
 
         <p>
             <input type="submit" value="Update Profile">

@@ -18,8 +18,8 @@
             {% if user.location %}
                 <p>Location: {{ user.location }}</p>
             {% endif %}
-            {% if user.date_of_birth %}
-                <p>Date of Birth: {{ user.date_of_birth.strftime('%B %d, %Y') }}</p>
+            {% if user.qualification%}
+                <p>Qualification: {{ user.qualification }}</p>
             {% endif %}
             
             {% if user == current_user %}
