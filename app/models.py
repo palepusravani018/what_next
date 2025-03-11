@@ -10,6 +10,7 @@ from app import login
 from hashlib import md5
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 # User table
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -58,81 +59,46 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
+class Group(db.Model):
+    __tablename__ = 'groups'
+    
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)  # Primary key
+    name: so.Mapped[str] = so.mapped_column(sa.String(100))  
+    standard: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50))
+    prerequisite_groups = db.relationship(
+        'GroupPrerequisite',
+        primaryjoin='Group.id == GroupPrerequisite.group_id',
+        back_populates='group'
+    )
+
+class GroupPrerequisite(db.Model):
+    __tablename__ = 'group_prerequisites'
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
+    prerequisite_group_id = db.Column(db.Integer, db.ForeignKey(Group.id), nullable=False)
+    group = db.relationship('Group', foreign_keys=[group_id], backref='group_prerequisites')
+    prerequisite_group = db.relationship('Group', foreign_keys=[prerequisite_group_id])
+
+# class Course(db.Model):
+#     __tablename__ = 'courses'
+    
+#     id: so.Mapped[int] = so.mapped_column(primary_key=True)  # Primary key
+#     name: so.Mapped[str] = so.mapped_column(sa.String(100))  
+#     type: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50))
+#     duration: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50))
+#     prerequisite_courses = db.relationship(
+#         'CoursePrerequisite',
+#         primaryjoin='Course.id == CoursePrerequisite.course_id',
+#         back_populates='course'
+#     )
+# class CoursePrerequisite(db.Model):
+#     __tablename__ = 'course_prerequisites'
+#     id = db.Column(db.Integer, primary_key=True)
+#     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+#     prerequisite_course_id = db.Column(db.Integer, db.ForeignKey(Course.id), nullable=False)
+#     course = db.relationship('Course', foreign_keys=[course_id], backref='course_prerequisites')
+#     prerequisite_course = db.relationship('Course', foreign_keys=[prerequisite_course_id])
 
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
-
-# # Subject table
-# class Subject(db.Model):
-#     __tablename__ = 'subject'
-
-#     id: so.Mapped[int] = sa.Column(sa.Integer, primary_key=True)  # Primary key
-#     name: so.Mapped[str] = sa.Column(sa.String(100), unique=True, nullable=False)  # Name of the subject
-#     description: so.Mapped[str] = sa.Column(sa.Text, nullable=True)  # Optional description of the subject
-#     created_at: so.Mapped[sa.DateTime] = sa.Column(sa.DateTime, default=sa.func.now())  # Timestamp when subject is created
-
-#     # Relationship with Topic (one-to-many)
-#     topics: so.Mapped[list["Topic"]] = so.relationship("Topic", backref="subject", lazy=True)
-
-#     def __init__(self, name: str, description: str = None):
-#         self.name = name
-#         self.description = description
-
-#     def __repr__(self):
-#         return f"<Subject {self.name}>"  
- 
-# # Topic table
-# class Topic(db.Model):
-#     __tablename__ = 'topic'
-
-#     # Define columns
-#     id: so.Mapped[int] = sa.Column(sa.Integer, primary_key=True)
-#     name: so.Mapped[str] = sa.Column(sa.String(100), unique=True, nullable=False)  # Topic name
-#     description: so.Mapped[str] = sa.Column(sa.Text, nullable=True)  # Optional description of the topic
-#     created_at: so.Mapped[sa.DateTime] = sa.Column(sa.DateTime, default=sa.func.now())  # Timestamp when the topic is created
-
-#     # Relationship with Subject (one-to-many)
-#     subject_id: so.Mapped[int] = sa.Column(sa.Integer, sa.ForeignKey('subject.id'), nullable=False)  # Foreign key to Subject
-#     subject: so.Mapped["Subject"] = so.relationship( backref="topics", lazy=True)  # One subject can have many topics
-
-#     # Relationship with Question (one-to-many)
-#     questions: so.Mapped[list["Question"]] = so.relationship("Question", backref="topic", lazy=True)  # A topic can have many questions
-
-#     def __init__(self, name: str, subject_id: int, description: str = None):
-#         self.name = name
-#         self.subject_id = subject_id
-#         self.description = description
-
-#     def __repr__(self):
-#         return f"<Topic {self.name}>"
-    
-#     # Quiz table
-# class Quiz(db.Model):
-#     __tablename__ = 'quiz'
-
-#     # Define columns using the latest version (SQLAlchemy 2.0)
-#     id: so.Mapped[int] = sa.Column(sa.Integer, primary_key=True)  # Primary key for the quiz
-#     title: so.Mapped[str] = sa.Column(sa.String(256), nullable=False)  # Title of the quiz
-#     duration: so.Mapped[int] = sa.Column(sa.Integer, nullable=False)  # Duration in minutes
-#     created_at: so.Mapped[sa.DateTime] = sa.Column(sa.DateTime, default=sa.func.now())  # Timestamp for creation
-#     topic_id: so.Mapped[int] = sa.Column(sa.Integer, sa.ForeignKey('topic.id'), nullable=False)  # Foreign key to Topic
-
-#     # Relationship with Topic (one-to-many)
-#     topic: so.Mapped["Topic"] = so.relationship("Topic", backref="quizzes", lazy=True)  # A topic can have multiple quizzes
-
-#     def __init__(self, title: str, duration: int, topic_id: int):
-#         self.title = title
-#         self.duration = duration
-#         self.topic_id = topic_id
-
-#     def __repr__(self):
-#         return f"<Quiz {self.title}>"
-    
-
-    
-
-
-
-
-

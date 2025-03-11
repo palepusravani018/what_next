@@ -5,8 +5,8 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.utils import secure_filename
 import sqlalchemy as sa
 from app import db, app
-from app.models import User
-from app.forms import LoginForm, RegistrationForm, ProfileForm
+from app.models import User, Group, GroupPrerequisite # Course, 
+from app.forms import LoginForm, RegistrationForm, ProfileForm, GroupForm,FlaskForm,CourseForm
 
 
 @app.route('/index')
@@ -66,15 +66,6 @@ def user(username):
     user = db.session.scalar(sa.select(User).where(User.username == username))
     return render_template('user.html', user=user)
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-# Check allowed file extensions
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 @app.route("/user/<username>/edit", methods=["GET", "POST"])
 @login_required
 def profile(username):
@@ -96,7 +87,7 @@ def profile(username):
         # Handle avatar file upload
         if form.avatar.data:
             avatar = form.avatar.data
-            if avatar and allowed_file(avatar.filename):
+            if avatar:
                 filename = secure_filename(avatar.filename)
                 avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 avatar.save(avatar_path)
@@ -111,4 +102,68 @@ def profile(username):
 
     return render_template('profile.html', form=form, user=user)
 
+@app.route('/create_group', methods=['GET', 'POST'])
+def create_group():
+    form = GroupForm()
+    
+    # Populate the prerequisite_groups field with existing groups
+    form.prerequisite_groups.choices = [(group.id, group.name) for group in Group.query.all()]
 
+    if form.validate_on_submit():
+        new_group = Group(name=form.name.data, standard=form.standard.data)
+        db.session.add(new_group)
+        db.session.commit()
+
+        # Add prerequisite groups
+        for prerequisite_id in form.prerequisite_groups.data:
+            prerequisite = GroupPrerequisite(group_id=new_group.id, prerequisite_group_id=prerequisite_id)
+            db.session.add(prerequisite)
+
+        db.session.commit()
+        flash('Group created successfully!', 'success')
+        return redirect(url_for('get_groups'))
+
+    return render_template('group_form.html', form=form)
+
+@app.route('/groups', methods=['GET', 'POST'])
+def get_groups():
+    groups = db.session.scalars(sa.select(Group)).all()
+    return render_template('groups_list.html', groups=groups)  # Assuming you want to render this in a template
+
+@app.route('/groups/<int:group_id>/delete', methods=['POST'])
+@login_required
+def delete_group(group_id):
+    if not current_user.is_admin:
+        return redirect(url_for('get_groups'))
+    
+    group = db.session.scalar(sa.select(Group).where(Group.id == group_id))
+    if group:
+        for prerequisite in group.prerequisite_groups:
+            db.session.delete(prerequisite)
+
+        db.session.delete(group)
+        db.session.commit()
+        flash('Group deleted successfully!', 'success')
+    else:
+        flash('Group not found!', 'danger')
+    
+    return redirect(url_for('get_groups'))
+
+@app.route('/course/<int:course_id>/delete', methods=['POST'])
+@login_required
+def delete_course(course_id):
+    # if not current_user.is_admin:
+    #     return redirect(url_for('get_courses'))
+    
+    # course = db.session.scalar(sa.select(Course).where(Course.id == course_id))
+    # if course:
+    #     for prerequisite in course.prerequisite_courses:
+    #         db.session.delete(prerequisite)
+
+    #     db.session.delete(course)
+    #     db.session.commit()
+    #     flash('Course deleted successfully!', 'success')
+    # else:
+    #     flash('Course not found!', 'danger')
+    
+    return redirect(url_for('get_courses'))

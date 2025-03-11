@@ -1,0 +1,15 @@
+<h1>Delete Group</h1>
+<p>Are you sure you want to delete the following group?</p>
+<p><strong>ID:</strong> 1</p> <!-- Replace with actual ID -->
+<p><strong>Name:</strong> Group A</p> <!-- Replace with actual name -->
+<p><strong>Standard:</strong> Standard 1</p> <!-- Replace with actual standard -->
+<p><strong>Prerequisite:</strong> None</p> <!-- Replace with actual prerequisite -->
+<td>
+    <input type="checkbox"{% if group.prerequisite_group %}checked{% endif %}disabled>
+</td>
+
+<form action="/delete" method="POST">
+    <input type="hidden" name="id" value="1"> <!-- Replace with actual ID -->
+    <input type="submit" value="Delete Group">
+</form>
+<a href="/groups">Cancel</a>

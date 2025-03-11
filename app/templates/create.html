@@ -1,0 +1,19 @@
+<h1>Create Group</h1>
+    <form action="/create" method="POST">
+        <label for="id">ID:</label>
+        <input type="number" id="id" name="id" required><br><br>
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="standard">Standard:</label>
+        <input type="text" id="standard" name="standard" required><br><br>
+
+        <label for="prerequisite">Prerequisite:</label>
+        <input type="text" id="prerequisite" name="prerequisite"><br><br>
+        <td>
+            <input type="checkbox"{% if group.prerequisite_group %}checked{% endif %}disabled>
+        </td>
+
+        <input type="submit" value="Create Group">
+    </form>

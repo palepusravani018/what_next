@@ -2,8 +2,22 @@ import sqlalchemy as sa
 import sqlalchemy.orm as so
 from flask_wtf.file import FileField, FileAllowed
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, ValidationError, Email, EqualTo, Length
+from wtforms import (
+    StringField, 
+    PasswordField, 
+    BooleanField, 
+    SubmitField, 
+    IntegerField, 
+    SelectField, 
+    SelectMultipleField
+)
+from wtforms.validators import (
+    DataRequired, 
+    ValidationError, 
+    Email, 
+    EqualTo, 
+    Length
+)
 
 from app import db
 from app.models import User
@@ -51,5 +65,19 @@ class Question(db.Model):
 class ProfileForm(FlaskForm):
     phone = StringField("Phone", validators=[DataRequired(), Length(min=10, max=15)])
     avatar = FileField('Update Avatar', validators=[FileAllowed(['jpg', 'png', 'jpeg'], 'Images only!')])
-    submit = SubmitField("Submit")   
-    
+    submit = SubmitField("Submit")
+
+class GroupForm(FlaskForm):
+    id = IntegerField('id')
+    name = StringField('name', validators=[DataRequired(), Length(max=50)])
+    standard = StringField('standard', validators=[DataRequired(), Length(max=50)])
+    prerequisite_groups = SelectMultipleField('Prerequisite Groups', coerce=int)
+    submit = SubmitField("Submit")
+
+class CourseForm(FlaskForm):
+    id = IntegerField('id')
+    name = StringField('name', validators=[DataRequired(), Length(max=50)])
+    prerequisite_course = SelectField('prerequisitecourse',choices=[],validators=[DataRequired()])
+    duration = StringField('duration', validators=[DataRequired(), Length(max=50)])
+    type = StringField('type', validators=[DataRequired(), Length(max=50)])
+    submit = SubmitField("Submit")

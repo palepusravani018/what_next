@@ -1,0 +1,17 @@
+<h1>Edit Group</h1>
+    <form action="/edit" method="POST">
+        <input type="hidden" id="id" name="id" value="1"> <!-- Replace with actual ID -->
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" value="Group A" required><br><br> <!-- Replace with actual name -->
+
+        <label for="standard">Standard:</label>
+        <input type="text" id="standard" name="standard" value="Standard 1" required><br><br> <!-- Replace with actual standard -->
+
+        <label for="prerequisite">Prerequisite:</label>
+        <input type="text" id="prerequisite" name="prerequisite" value="None"><br><br> <!-- Replace with actual prerequisite -->
+        <td>
+            <input type="checkbox"{% if group.prerequisite_group %}checked{% endif %}disabled>
+        </td>
+        <input type="submit" value="Update Group">
+    </form>

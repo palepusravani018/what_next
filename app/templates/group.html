@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Display Group Details -->
+<table >
+    <tr>
+        <th>ID</th>
+        <td>{{ group.id }}</td>
+    </tr>
+    <tr>
+        <th>Name</th>
+        <td>{{ group.name }}</td>
+    </tr>
+    <tr>
+        <th>Standard</th>
+        <td>{{ group.standard }}</td>
+    </tr>
+    <tr>
+        <th>Prerequisite Groups</th>
+        <td>{{ group.prerequisite_group or 'None' }}</td>
+    </tr>
+    <td>
+        <input type="checkbox"{% if group.prerequisite_group %}checked{% endif %}disabled>
+    </td>
+</table>
+
+<!-- Links to Edit or Delete Group -->
+<br>
+<a href="{{ url_for('edit_group', id=group.id) }}">Edit Group</a> |
+<form action="{{ url_for('delete_group', id=group.id) }}" method="POST" style="display:inline;">
+    <button type="submit">Delete Group</button>
+</form>
+
+<br><br>
+<a href="{{ url_for('get_groups') }}">Back to Groups List</a>
+{% endblock %}
