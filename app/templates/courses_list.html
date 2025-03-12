@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if current_user.is_admin %}
+        <a href="{{ url_for('create_course') }}">Create Course</a>
+    {% endif %}
+    <h1>Courses List</h1>
+    <form action="" method="POST">
+        {% for course in courses %}
+        <table>
+            <tr valign="top">
+                <td>
+                    <a href="{{ url_for('view_course', course_id=course.id) }}">
+                    {{ course.name }}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Type: </strong>{{ course.type }}</td>
+            </tr>
+            <tr>
+                <td><strong>Duration: </strong>{{ course.duration }}</td>
+            </tr>
+            {% if course.prerequisite_courses %}
+            <tr>
+                <td>
+                    <strong>Prerequisite Courses: </strong>
+                    {% if course.prerequisite_courses %}
+                        {% for prerequisite_course in course.prerequisite_courses %}
+                            {{ prerequisite_course.course.name }} &nbsp;
+                        {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+        <br>
+        {% endfor %}
+    </form>
+{% endblock %}

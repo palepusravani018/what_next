@@ -76,8 +76,8 @@ class GroupForm(FlaskForm):
 
 class CourseForm(FlaskForm):
     id = IntegerField('id')
-    name = StringField('name', validators=[DataRequired(), Length(max=50)])
-    prerequisite_course = SelectField('prerequisitecourse',choices=[],validators=[DataRequired()])
-    duration = StringField('duration', validators=[DataRequired(), Length(max=50)])
     type = StringField('type', validators=[DataRequired(), Length(max=50)])
+    name = StringField('name', validators=[DataRequired(), Length(max=50)])
+    duration = StringField('duration', validators=[DataRequired(), Length(max=50)])
+    prerequisite_courses = SelectMultipleField('Prerequisite Courses', coerce=int)
     submit = SubmitField("Submit")

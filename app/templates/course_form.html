@@ -13,6 +13,13 @@
             {% endfor %}
         </p>
         <p>
+            {{ form.type.label }}<br>
+            {{ form.type(size=32) }}<br>
+            {% for error in form.type.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
             {{ form.duration.label }}<br>
             {{ form.duration(size=32) }}<br>
             {% for error in form.duration.errors %}
@@ -23,13 +30,6 @@
             {{ form.prerequisite_courses.label }}<br>
             {{ form.prerequisite_courses() }}<br>
             {% for error in form.prerequisite_courses.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.type.label }}<br>
-            {{ form.type(size=32) }}<br>
-            {% for error in form.type.errors %}
                 <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>

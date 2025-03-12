@@ -5,26 +5,31 @@
         <a href="{{ url_for('create_group') }}">Create Group</a>
     {% endif %}
     <h1>Groups List</h1>
-    {{ group }}
     <form action="" method="POST">
+        {% for group in groups %}
         <table>
-            {% for group in groups %}
+            <tr valign="top">
+                <td>
+                    <a href="{{ url_for('view_group', group_id=group.id) }}">
+                    {{ group.name}}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Standard: </strong> {{ group.standard }}</td>
+            </tr>
+            {% if group.prerequisite_groups %}
             <tr>
                 <td>
-                    <strong>{{ group.id }}</strong><br>
-                    {{ group.name }}<br>
-                    {{ group.standard }}<br>
-                    {{ group.prerequisite_groups }}<br>
+                    <strong>Prerequisite Groups: </strong>
+                    {% for prerequisite in group.prerequisite_groups %}
+                        {{ prerequisite.prerequisite_group.name }} &nbsp;
+                    {% endfor %}
                 </td>
-                {% if current_user.is_admin %}
-                <td>
-                    <form action="{{ url_for('delete_group', group_id=group.id) }}" method="POST" style="display:inline;">
-                        <input type="submit" value="Delete">
-                    </form>
-                </td>
-                {% endif %}
             </tr>
-            {% endfor %}
+            {% endif %}
         </table>
+        <br>
+        {% endfor %}
     </form>
 {% endblock %}

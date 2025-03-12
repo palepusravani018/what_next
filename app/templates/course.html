@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <table>
+        <tr valign="top">
+            <td>
+                <h1>{{ course.name }}</h1>
+                <a href="{{ url_for('edit_course', course_id=course.id) }}">Edit</a>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Type: </strong> {{ course.type }}</td>
+        </tr>
+        <tr>
+            <td><strong>Duration: </strong> {{ course.duration }}</td>
+        </tr>
+        <tr>
+            <td>
+                <strong>Prerequisite Courses: </strong>
+                {% if course.prerequisite_courses %}
+                <ul>
+                    {% for prerequisite in course.prerequisite_courses %}
+                        <li>{{ prerequisite.prerequisite_course.name }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                    <p>No prerequisite courses</p>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            {% if current_user.is_admin %}
+            <td>
+                <form action="{{ url_for('delete_course', course_id=course.id) }}" method="POST" style="display:inline;">
+                    <input type="submit" value="Delete">
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+    </table>
+{% endblock %}
