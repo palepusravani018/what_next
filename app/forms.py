@@ -51,17 +51,6 @@ class RegistrationForm(FlaskForm):
         if user is not None:
             raise ValidationError("Please use a different email address")
 
-class Question(db.Model):
-    __tablename__ = 'question'
-    __table_args__ = {'extend_existing': True}
-
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(256))
-    content = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=sa.func.now())
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', backref='questions')
-
 class ProfileForm(FlaskForm):
     phone = StringField("Phone", validators=[DataRequired(), Length(min=10, max=15)])
     avatar = FileField('Update Avatar', validators=[FileAllowed(['jpg', 'png', 'jpeg'], 'Images only!')])
