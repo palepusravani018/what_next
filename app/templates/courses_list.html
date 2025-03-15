@@ -21,13 +21,13 @@
             <tr>
                 <td><strong>Duration: </strong>{{ course.duration }}</td>
             </tr>
-            {% if course.prerequisite_courses %}
+            {% if course.course_prerequisites %}
             <tr>
                 <td>
                     <strong>Prerequisite Courses: </strong>
-                    {% if course.prerequisite_courses %}
-                        {% for prerequisite_course in course.prerequisite_courses %}
-                            {{ prerequisite_course.course.name }} &nbsp;
+                    {% if course.course_prerequisites %}
+                        {% for prerequisite in course.course_prerequisites %}
+                            {{ prerequisite.prerequisite_course.name }} &nbsp;
                         {% endfor %}
                     {% endif %}
                 </td>

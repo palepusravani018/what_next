@@ -20,9 +20,9 @@
             {% endfor %}
         </p>
         <p>
-            {{ form.prerequisite_groups.label }}<br>
-            {{ form.prerequisite_groups() }}<br>
-            {% for error in form.prerequisite_groups.errors %}
+            {{ form.group_prerequisites.label }}<br>
+            {{ form.group_prerequisites() }}<br>
+            {% for error in form.group_prerequisites.errors %}
                 <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>

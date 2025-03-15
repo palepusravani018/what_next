@@ -60,7 +60,7 @@ class GroupForm(FlaskForm):
     id = IntegerField('id')
     name = StringField('name', validators=[DataRequired(), Length(max=50)])
     standard = StringField('standard', validators=[DataRequired(), Length(max=50)])
-    prerequisite_groups = SelectMultipleField('Prerequisite Groups', coerce=int)
+    group_prerequisites = SelectMultipleField('Prerequisite Groups', coerce=int)
     submit = SubmitField("Submit")
 
 class CourseForm(FlaskForm):
@@ -68,5 +68,10 @@ class CourseForm(FlaskForm):
     type = StringField('type', validators=[DataRequired(), Length(max=50)])
     name = StringField('name', validators=[DataRequired(), Length(max=50)])
     duration = StringField('duration', validators=[DataRequired(), Length(max=50)])
-    prerequisite_courses = SelectMultipleField('Prerequisite Courses', coerce=int)
+    course_prerequisites = SelectMultipleField('Prerequisite Courses', coerce=int)
+    submit = SubmitField("Submit")
+
+class SubjectForm(FlaskForm):
+    name = StringField('name', validators=[DataRequired(), Length(max=32)])
+    topics = StringField('topics', validators=[DataRequired()])
     submit = SubmitField("Submit")

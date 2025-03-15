@@ -1,5 +1,57 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+    <table>
+        <tr valign="top">
+            <td>
+                <h1>{{ group.name }}</h1>
+                <a href="{{ url_for('edit_group', course_id=group.course_group_id, group_id=group.id) }}">Edit</a>
+            </td>
+        </tr>
+        <tr valign="top">
+            <td><strong>Standard: </strong> {{ group.standard }}</td>
+        </tr>
+        {% if subjects %}
+        <tr valign="top">
+            <td>
+                <strong>Subjects: </strong>
+                {% if not current_user.is_anonymous and current_user.is_admin %}
+                    {% include "_subject_form.html" %}
+                {% endif %}
+                <ul>
+                    {% for subject in subjects %}
+                        <li>
+                            <p><strong>{{ subject.name }}</strong></p>
+                            <p><strong>Topics: </strong>{{ subject.topics }}</p>
+                            <form action="{{ url_for('delete_subject', course_id=group.course_group_id, group_id=group.id, subject_id=subject.id) }}" method="POST" style="display:inline;">
+                                <input type="submit" value="Delete">
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endif %}
+        {% if group.group_prerequisites %}
+        <tr valign="top">
+            <td>
+                <strong>Prerequisite Groups: </strong>
+                <ul>
+                    {% for prerequisite in group.group_prerequisites %}
+                        <li>{{ prerequisite.prerequisite_group.name }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endif %}
+        <tr valign="top">
+            {% if current_user.is_admin %}
+            <td>
+                <form action="{{ url_for('delete_group', course_id=group.course_group_id, group_id=group.id) }}" method="POST" style="display:inline;">
+                    <input type="submit" value="Delete">
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+    </table>
 {% endblock %}

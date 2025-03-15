@@ -5,12 +5,12 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.utils import secure_filename
 import sqlalchemy as sa
 from app import db, app
-from app.models import User, Group, GroupPrerequisite, Course, CoursePrerequisite
-from app.forms import LoginForm, RegistrationForm, ProfileForm, GroupForm,FlaskForm,CourseForm
+from app.models import User, Group, GroupPrerequisite, Course, CoursePrerequisite, Subject
+from app.forms import LoginForm, RegistrationForm, ProfileForm, GroupForm,FlaskForm,CourseForm, SubjectForm
 
 
-@app.route('/index')
 @app.route('/')
+@app.route('/index')
 @login_required
 def index():
     return render_template("index.html", title="Home")
@@ -102,89 +102,6 @@ def profile(username):
 
     return render_template('profile.html', form=form, user=user)
 
-@app.route('/groups', methods=['GET', 'POST'])
-def get_groups():
-    groups = db.session.scalars(sa.select(Group)).all()
-    return render_template('groups_list.html', groups=groups)
-
-@app.route('/groups/create', methods=['GET', 'POST'])
-def create_group():
-    form = GroupForm()
-    
-    # Populate the prerequisite_groups field with existing groups
-    form.prerequisite_groups.choices = [(group.id, group.name) for group in Group.query.all()]
-
-    if form.validate_on_submit():
-        new_group = Group(name=form.name.data, standard=form.standard.data)
-        db.session.add(new_group)
-        db.session.commit()
-
-        # Add prerequisite groups
-        for prerequisite_id in form.prerequisite_groups.data:
-            prerequisite = GroupPrerequisite(group_id=new_group.id, prerequisite_group_id=prerequisite_id)
-            db.session.add(prerequisite)
-
-        db.session.commit()
-        flash('Group created successfully!', 'success')
-        return redirect(url_for('get_groups'))
-
-    return render_template('group_form.html', form=form)
-
-@app.route("/groups/<int:group_id>", methods=["GET"])
-def view_group(group_id):
-    group = db.session.scalar(sa.select(Group).where(Group.id == group_id))
-    return render_template('group.html', group=group)
-
-@app.route("/groups/<int:group_id>/edit", methods=["GET", "POST"])
-@login_required
-def edit_group(group_id):
-    if not current_user.is_admin:
-        return redirect(url_for('get_groups'))
-    
-    group = db.session.scalar(sa.select(Group).where(Group.id == group_id))
-    form = GroupForm(obj=group)
-
-    # Populate the prerequisite_groups field with existing groups
-    form.prerequisite_groups.choices = [(group.id, group.name) for group in Group.query.all()]
-
-    if form.validate_on_submit():
-        group.name = form.name.data
-        group.standard = form.standard.data
-
-        db.session.commit()
-
-        for prerequisite in group.prerequisite_groups:
-            db.session.delete(prerequisite)
-
-        for prerequisite_id in form.prerequisite_groups.data:
-            prerequisite = GroupPrerequisite(group_id=group.id, prerequisite_group_id=prerequisite_id)
-            db.session.add(prerequisite)
-
-        db.session.commit()
-        flash('Group updated successfully!', 'success')
-        return redirect(url_for('get_groups'))
-
-    return render_template('group_form.html', form=form)
-
-@app.route('/groups/<int:group_id>/delete', methods=['POST'])
-@login_required
-def delete_group(group_id):
-    if not current_user.is_admin:
-        return redirect(url_for('get_groups'))
-    
-    group = db.session.scalar(sa.select(Group).where(Group.id == group_id))
-    if group:
-        for prerequisite in group.prerequisite_groups:
-            db.session.delete(prerequisite)
-
-        db.session.delete(group)
-        db.session.commit()
-        flash('Group deleted successfully!', 'success')
-    else:
-        flash('Group not found!', 'danger')
-    
-    return redirect(url_for('get_groups'))
-
 @app.route('/courses', methods=['GET', 'POST'])
 def get_courses():
     courses = db.session.scalars(sa.select(Course)).all()
@@ -194,7 +111,7 @@ def get_courses():
 def create_course():
     form = CourseForm()
     
-    form.prerequisite_courses.choices = [(course.id, course.name) for course in Course.query.all()]
+    form.course_prerequisites.choices = [(course.id, course.name) for course in Course.query.all()]
 
     if form.validate_on_submit():
         new_course = Course(
@@ -205,7 +122,7 @@ def create_course():
         db.session.add(new_course)
         db.session.commit()
 
-        for prerequisite_id in form.prerequisite_courses.data:
+        for prerequisite_id in form.course_prerequisites.data:
             prerequisite = CoursePrerequisite(course_id=new_course.id, prerequisite_course_id=prerequisite_id)
             db.session.add(prerequisite)
 
@@ -217,8 +134,9 @@ def create_course():
 
 @app.route("/courses/<int:course_id>", methods=["GET"])
 def view_course(course_id):
-    course = db.session.scalar(sa.select(Course).where(Course.id == course_id))
-    return render_template('course.html', course=course)
+    course = db.first_or_404(sa.select(Course).where(Course.id == course_id))
+    groups = db.session.scalars(sa.select(Group).where(Group.course_group_id == course_id))
+    return render_template('course_details.html', course=course, groups=groups)
 
 @app.route("/courses/<int:course_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -229,7 +147,7 @@ def edit_course(course_id):
     course = db.session.scalar(sa.select(Course).where(Course.id == course_id))
     form = CourseForm(obj=course)
 
-    form.prerequisite_courses.choices = [(course.id, course.name) for course in Course.query.all()]
+    form.course_prerequisites.choices = [(course.id, course.name) for course in Course.query.all()]
 
     if form.validate_on_submit():
         course.type = form.type.data
@@ -238,10 +156,10 @@ def edit_course(course_id):
 
         db.session.commit()
 
-        for prerequisite in course.prerequisite_courses:
+        for prerequisite in course.course_prerequisites:
             db.session.delete(prerequisite)
 
-        for prerequisite_id in form.prerequisite_courses.data:
+        for prerequisite_id in form.course_prerequisites.data:
             prerequisite = CoursePrerequisite(course_id=course.id, prerequisite_course_id=prerequisite_id)
             db.session.add(prerequisite)
 
@@ -257,15 +175,134 @@ def delete_course(course_id):
     if not current_user.is_admin:
         return redirect(url_for('get_courses'))
     
-    course = db.session.scalar(sa.select(Course).where(Course.id == course_id))
-    if course:
-        for prerequisite in course.prerequisite_courses:
-            db.session.delete(prerequisite)
+    course = db.first_or_404(sa.select(Course).where(Course.id == course_id))
 
-        db.session.delete(course)
-        db.session.commit()
-        flash('Course deleted successfully!', 'success')
-    else:
-        flash('Course not found!', 'danger')
+    for prerequisite in course.course_prerequisites:
+        db.session.delete(prerequisite)
+    
+    groups = db.session.scalars(sa.select(Group).where(Group.course_group_id == course_id)).all()
+    for group in groups:
+        for prerequisite in group.group_prerequisites:
+            db.session.delete(prerequisite)
+        db.session.delete(group)
+
+    db.session.delete(course)
+    db.session.commit()
+    flash('Course deleted successfully!', 'success')
     
     return redirect(url_for('get_courses'))
+
+@app.route('/courses/<int:course_id>/groups', methods=['GET', 'POST'])
+def get_groups(course_id):
+    course = db.first_or_404(sa.select(Course).where(Course.id == course_id))
+    groups = db.session.scalars(sa.select(Group).where(Group.course_group_id == course_id)).all()
+    return render_template('groups_list.html', course=course, groups=groups)
+
+@app.route('/courses/<int:course_id>/groups/create', methods=['GET', 'POST'])
+@login_required
+def create_group(course_id):
+    if not current_user.is_admin:
+        return redirect(url_for('get_groups', course_id=course_id))
+    
+    course = db.first_or_404(sa.select(Course).where(Course.id == course_id))
+    form = GroupForm()
+    
+    # Populate the group_prerequisites field with existing groups
+    form.group_prerequisites.choices = [(group.id, group.name) for group in Group.query.all()]
+
+    if form.validate_on_submit():
+        new_group = Group(
+            name=form.name.data, 
+            standard=form.standard.data,
+            course_group=course
+        )
+        db.session.add(new_group)
+        db.session.commit()
+
+        # Add prerequisite groups
+        for prerequisite_id in form.group_prerequisites.data:
+            prerequisite = GroupPrerequisite(group_id=new_group.id, prerequisite_group_id=prerequisite_id)
+            db.session.add(prerequisite)
+
+        db.session.commit()
+        flash('Group created successfully!', 'success')
+        return redirect(url_for('view_group', course_id=course_id, group_id=new_group.id))
+
+    return render_template('group_form.html', form=form)
+
+@app.route("/courses/<int:course_id>/groups/<int:group_id>", methods=["GET", "POST"])
+@login_required
+def view_group(course_id, group_id):
+    group = db.first_or_404(sa.select(Group).where(Group.id==group_id, Group.course_group_id==course_id))
+    subjects = db.session.scalars(sa.select(Subject).where(Subject.subject_group_id==group_id))
+    
+    form = SubjectForm()
+    if not current_user.is_anonymous and current_user.is_admin:
+        if form.validate_on_submit():
+            new_subject = Subject(
+                name = form.name.data,
+                topics = form.topics.data,
+                subject_group = group
+            )
+            db.session.add(new_subject)
+            db.session.commit()
+            return redirect(url_for("view_group", course_id=course_id, group_id=group_id))
+    return render_template('group_details.html', form=form, group=group, subjects=subjects)
+
+@app.route("/course/<int:course_id>/groups/<int:group_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_group(course_id, group_id):
+    if not current_user.is_admin:
+        return redirect(url_for('get_groups', course_id=course_id))
+    
+    group = db.first_or_404(sa.select(Group).where(Group.id == group_id, Group.course_group_id == course_id))
+    form = GroupForm(obj=group)
+
+    # Populate the group_prerequisites field with existing groups
+    form.group_prerequisites.choices = [(group.id, group.name) for group in Group.query.all()]
+
+    if form.validate_on_submit():
+        group.name = form.name.data
+        group.standard = form.standard.data
+
+        db.session.commit()
+
+        for prerequisite in group.group_prerequisites:
+            db.session.delete(prerequisite)
+
+        for prerequisite_id in form.group_prerequisites.data:
+            prerequisite = GroupPrerequisite(group_id=group.id, prerequisite_group_id=prerequisite_id)
+            db.session.add(prerequisite)
+
+        db.session.commit()
+        flash('Group updated successfully!', 'success')
+        return redirect(url_for('get_groups', course_id=course_id))
+
+    return render_template('group_form.html', form=form)
+
+@app.route('/courses/<int:course_id>/groups/<int:group_id>/delete', methods=['POST'])
+@login_required
+def delete_group(course_id, group_id):
+    if not current_user.is_admin:
+        return redirect(url_for('get_groups', course_id=course_id))
+    
+    group = db.first_or_404(sa.select(Group).where(Group.id == group_id, Group.course_group_id == course_id))
+    for prerequisite in group.group_prerequisites:
+        db.session.delete(prerequisite)
+
+    db.session.delete(group)
+    db.session.commit()
+    flash('Group deleted successfully!', 'success')
+    
+    return redirect(url_for('get_groups'))
+
+@app.route("/courses/<int:course_id>/groups/<int:group_id>/subjects/<subject_id>", methods=["POST"])
+@login_required
+def delete_subject(course_id, subject_id, group_id):
+    if not current_user.is_anonymous and current_user.is_admin:
+        subject = db.first_or_404(sa.select(Subject).where(Subject.id==subject_id, Subject.subject_group_id==group_id))
+
+        db.session.delete(subject)
+        db.session.commit()
+        flash('Subjecty deleted successfully!', 'success')
+    return redirect(url_for('view_group', course_id=course_id, group_id=group_id))

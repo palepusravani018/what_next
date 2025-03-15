@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <table>
+        <tr valign="top">
+            <td>
+                <h1>{{ course.name }}</h1>
+            </td>
+        </tr>
+        <tr valign="top">
+            <td><strong>Type: </strong> {{ course.type }}</td>
+        </tr>
+        <tr valign="top">
+            <td><strong>Duration: </strong> {{ course.duration }}</td>
+        </tr>
+        {% if not current_user.is_anonymouse and current_user.is_admin %}
+        <tr>
+            <td>
+                <a href="{{ url_for('edit_course', course_id=course.id) }}">Edit</a>
+            </td>
+            <td>
+                <form action="{{ url_for('delete_course', course_id=course.id) }}" method="POST" style="display:inline;">
+                    <input type="submit" value="Delete">
+                </form>
+            </td>
+        </tr>
+        {% endif %}
+        <tr valign="top">
+            <td>
+                <strong>Groups :</strong>
+                <a href="{{ url_for('create_group', course_id=course.id) }}">Create Group</a>
+                {% if current_user.is_admin %}
+                {% endif %}
+                {% if groups %}
+                    <ul>
+                    {% for group in groups %}
+                        <li>
+                            <table>
+                                <tr valign="top">
+                                    <td>
+                                        <a href="{{ url_for('view_group', course_id=course.id, group_id=group.id) }}">
+                                        {{ group.name}}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Standard: </strong> {{ group.standard }}</td>
+                                </tr>
+                                {% if group.group_prerequisites %}
+                                <tr>
+                                    <td>
+                                        <strong>Prerequisite Groups: </strong>
+                                        {% for prerequisite in group.group_prerequisites %}
+                                            {{ prerequisite.prerequisite_group.name }} &nbsp;
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </td>
+        </tr>
+        {% if course.course_prerequisites %}
+        <tr valign="top">
+            <td>
+                <strong>Prerequisite Courses: </strong>
+                <ul>
+                    {% for prerequisite in course.course_prerequisites %}
+                        <li>{{ prerequisite.prerequisite_course.name }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+{% endblock %}

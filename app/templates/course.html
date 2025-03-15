@@ -17,9 +17,9 @@
         <tr>
             <td>
                 <strong>Prerequisite Courses: </strong>
-                {% if course.prerequisite_courses %}
+                {% if course.course_prerequisites %}
                 <ul>
-                    {% for prerequisite in course.prerequisite_courses %}
+                    {% for prerequisite in course.course_prerequisites %}
                         <li>{{ prerequisite.prerequisite_course.name }}</li>
                     {% endfor %}
                 </ul>

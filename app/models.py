@@ -59,59 +59,79 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
-class Group(db.Model):
-    __tablename__ = 'groups'
-    
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)  # Primary key
-    name: so.Mapped[str] = so.mapped_column(sa.String(100))  
-    standard: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50))
-    prerequisite_groups = db.relationship(
-        'GroupPrerequisite',
-        primaryjoin='Group.id == GroupPrerequisite.group_id',
-        back_populates='group'
-    )
-
-    def __repr__(self):
-        return '<Group {}>'.format(self.name)
-
-class GroupPrerequisite(db.Model):
-    __tablename__ = 'group_prerequisites'
-    id = db.Column(db.Integer, primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
-    prerequisite_group_id = db.Column(db.Integer, db.ForeignKey(Group.id), nullable=False)
-    group = db.relationship('Group', foreign_keys=[group_id], backref='group_prerequisites')
-    prerequisite_group = db.relationship('Group', foreign_keys=[prerequisite_group_id])
-
-    def __repr__(self):
-        return '<GroupPrerequisite {}>'.format(self.id)
-
 class Course(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(100))  
     type: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50))
     duration: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50))
-    prerequisite_courses = db.relationship(
+    
+    # Renamed to clarify that these are prerequisites for the course
+    course_prerequisites = db.relationship(
         'CoursePrerequisite',
         primaryjoin='Course.id == CoursePrerequisite.course_id',
         back_populates='course'
     )
-    subjects: so.WriteOnlyMapped['Subject'] = so.relationship(back_populates='course_subject')
+    
+    groups: so.WriteOnlyMapped['Group'] = so.relationship(
+        'Group',
+        back_populates='course_group',
+        passive_deletes=True
+    )
+
 
 class CoursePrerequisite(db.Model):
-    __tablename__ = 'course_prerequisites'
     id = db.Column(db.Integer, primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
-    course = db.relationship('Course', foreign_keys=[course_id], backref='course_prerequisites')
+    course = db.relationship('Course', foreign_keys=[course_id], back_populates='course_prerequisites')
     prerequisite_course_id = db.Column(db.Integer, db.ForeignKey(Course.id), nullable=False)
-    prerequisite_course = db.relationship('Course', foreign_keys=[prerequisite_course_id])
+    prerequisite_course = db.relationship('Course', foreign_keys=[prerequisite_course_id], backref='prerequisite_courses')
+
+
+class Group(db.Model):    
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)  # Primary key
+    name: so.Mapped[str] = so.mapped_column(sa.String(100))  
+    standard: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50))
+    
+    # Renamed to clarify that these are prerequisites for the group
+    group_prerequisites = db.relationship(
+        'GroupPrerequisite',
+        primaryjoin='Group.id == GroupPrerequisite.group_id',
+        back_populates='group'
+    )
+    
+    course_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Course.id), index=True)
+    course_group: so.Mapped[Course] = so.relationship(back_populates='groups')
+
+    subjects: so.WriteOnlyMapped['Subject'] = so.relationship(
+        'Subject', 
+        back_populates='subject_group',
+        passive_deletes=True
+    )
+
+    def __repr__(self):
+        return '<Group {}>'.format(self.name)
+
+
+class GroupPrerequisite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey(Group.id), nullable=False)
+    prerequisite_group_id = db.Column(db.Integer, db.ForeignKey(Group.id), nullable=False)
+    group = db.relationship('Group', foreign_keys=[group_id], back_populates='group_prerequisites')
+    prerequisite_group = db.relationship('Group', foreign_keys=[prerequisite_group_id])
+
+    def __repr__(self):
+        return '<GroupPrerequisite {}>'.format(self.id)
+
 
 class Subject(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(100))
     topics: so.Mapped[str] = so.mapped_column(sa.String(256))
-    course_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Course.id), index=True)
-    course_subject: so.Mapped[Course] = so.relationship(back_populates='subjects')
+    subject_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Group.id), index=True)
+    subject_group: so.Mapped[Group] = so.relationship(back_populates='subjects')
 
+    def __repr__(self):
+        return '<Subject {}>'.format(self.name)
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))

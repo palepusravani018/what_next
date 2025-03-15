@@ -27,9 +27,9 @@
             {% endfor %}
         </p>
         <p>
-            {{ form.prerequisite_courses.label }}<br>
-            {{ form.prerequisite_courses() }}<br>
-            {% for error in form.prerequisite_courses.errors %}
+            {{ form.course_prerequisites.label }}<br>
+            {{ form.course_prerequisites() }}<br>
+            {% for error in form.course_prerequisites.errors %}
                 <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
